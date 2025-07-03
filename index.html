@@ -29,8 +29,8 @@
 
   const loader = new THREE.TextureLoader();
 
-  const frontTexture = loader.load('front.jpeg', setupScene); // Front lädt zuerst
-  const backTexture = loader.load('back.jpeg');               // Back parallel
+  const frontTexture = loader.load('back.jpeg', setupScene); // Front lädt zuerst
+  const backTexture = loader.load('front.jpeg');               // Back parallel
 
   function setupScene(texture) {
     const width = texture.image.width;

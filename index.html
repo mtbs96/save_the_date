@@ -17,11 +17,10 @@
 <script>
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.z = 5;
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(window.devicePixelRatio); // 🧼 Schärfe für Retina/4K
+  renderer.setPixelRatio(window.devicePixelRatio);
   document.body.appendChild(renderer.domElement);
 
   const light = new THREE.DirectionalLight(0xffffff, 1);
@@ -30,22 +29,23 @@
 
   const loader = new THREE.TextureLoader();
 
-  const frontTexture = loader.load('front.jpeg', setupScene);
-  const backTexture = loader.load('back.jpeg');
+  const frontTexture = loader.load('front.jpeg', setupScene); // Front lädt zuerst
+  const backTexture = loader.load('back.jpeg');               // Back parallel
 
   function setupScene(texture) {
     const width = texture.image.width;
     const height = texture.image.height;
     const ratio = width / height;
 
-    const geometry = new THREE.BoxGeometry(4 * ratio, 4, 0.01); // ✏️ Dünne Karte mit Bildformat
+    // Karte in Bildproportion
+    const geometry = new THREE.BoxGeometry(4 * ratio, 4, 0.01);
     const materials = [
-      new THREE.MeshBasicMaterial({ color: 0xdddddd }), // links
-      new THREE.MeshBasicMaterial({ color: 0xdddddd }), // rechts
-      new THREE.MeshBasicMaterial({ color: 0xeeeeee }), // oben
-      new THREE.MeshBasicMaterial({ color: 0xeeeeee }), // unten
-      new THREE.MeshBasicMaterial({ map: frontTexture }), // vorne
-      new THREE.MeshBasicMaterial({ map: backTexture })   // hinten
+      new THREE.MeshBasicMaterial({ color: 0xdddddd }),             // links
+      new THREE.MeshBasicMaterial({ color: 0xdddddd }),             // rechts
+      new THREE.MeshBasicMaterial({ color: 0xeeeeee }),             // oben
+      new THREE.MeshBasicMaterial({ color: 0xeeeeee }),             // unten
+      new THREE.MeshBasicMaterial({ map: frontTexture }),           // vorne
+      new THREE.MeshBasicMaterial({ map: backTexture })             // hinten
     ];
 
     const card = new THREE.Mesh(geometry, materials);
@@ -54,10 +54,22 @@
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
 
-    let rotationSpeed = 0.001; // 🐢 langsame Drehung
+    // Startposition für sanften Zoom-Out
+    camera.position.z = 7;
+    const targetZoom = 5.5;
+    const zoomSpeed = 0.02;
+
+    // Rotation: 1x pro Minute = 2π / 60 / 60
+    const rotationSpeed = 0.001745;
 
     function animate() {
       requestAnimationFrame(animate);
+
+      // Sanftes Reinfahren beim Start
+      if (camera.position.z > targetZoom) {
+        camera.position.z -= zoomSpeed;
+      }
+
       card.rotation.y += rotationSpeed;
       controls.update();
       renderer.render(scene, camera);
@@ -65,6 +77,7 @@
 
     animate();
 
+    // Responsives Verhalten
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
